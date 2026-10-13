@@ -1,11 +1,14 @@
 function Navbar() {
-    return (
-        <nav>
-            <h1>CampusEvents</h1>
-            <a href="#">Home</a>
-            <a href="../pages/Events.tsx">Events</a>
-            <a href="#">Login</a>
+  return (
+    <>
+        <h1>CampusEvents</h1>
+        <nav className="menu">
+          <a href="#">Home</a>
+          <a href="#">Events</a>
+          <a href="#">Login</a>
+          <a href="#">Register</a>
         </nav>
+      </>
     )
 }
 
