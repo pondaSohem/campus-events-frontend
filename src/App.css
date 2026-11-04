@@ -1,12 +1,12 @@
 .menu {
-    display: flex;
-    justify-content: space-evenly;
+  display: flex;
+  justify-content: space-evenly;
 }
 
 .menu a {
-    text-decoration: none;
-    margin: 10px;
-    border: 1px solid black;
-    padding: 5px;
-    border-radius: 10px;
+  text-decoration: none;
+  margin: 10px;
+  border: 1px solid black;
+  padding: 5px;
+  border-radius: 10px;
 }

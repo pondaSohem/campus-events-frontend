@@ -4,7 +4,7 @@ interface EventCardProps {
     price: number;
 }
 
-function EventCard({ title, location, price }: EventCardProps ) {
+function EventCard({ title, location, price }: EventCardProps) {
     return (
         <article>
             <h3>{title}</h3>
