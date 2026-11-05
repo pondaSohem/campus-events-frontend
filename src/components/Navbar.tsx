@@ -1,15 +1,34 @@
-function Navbar() {
+import { NavLink } from "react-router-dom";
+
+export default function Navbar() {
   return (
-    <>
-      <h1>CampusEvents</h1>
-      <nav className="menu">
-        <a href="#">Home</a>
-        <a href="#">Events</a>
-        <a href="#">Login</a>
-        <a href="#">Register</a>
-      </nav>
-    </>
+    <nav className="navbar navbar-expand navbar-dark bg-dark">
+      <div className="container">
+        <NavLink className="navbar-brand" to="/">
+          CampusEvents
+        </NavLink>
+
+        <div className="navbar-nav">
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) =>
+              `nav-link${isActive ? " active" : ""}`
+            }
+          >
+            Home
+          </NavLink>
+
+          <NavLink
+            to="/events"
+            className={({ isActive }) =>
+              `nav-link${isActive ? " active" : ""}`
+            }
+          >
+            Events
+          </NavLink>
+        </div>
+      </div>
+    </nav>
   );
 }
-
-export default Navbar;

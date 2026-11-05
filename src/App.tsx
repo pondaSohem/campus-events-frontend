@@ -1,21 +1,23 @@
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
+import { Route, Routes } from "react-router-dom";
+import AppLayout from "./components/AppLayout";
+import Home from "./pages/Home";
 import Events from "./pages/Events";
-import "./App.css";
+import EventNew from "./pages/EventNew";
+import EventDetails from "./pages/EventDetails";
+import EventEdit from "./pages/EventEdit";
+import NotFound from "./pages/NotFound";
 
-
-
-function App() {
+export default function App() {
   return (
-    <>
-      <Navbar />
-      <main>
-        <h2>Welcome to CampusEvents</h2>
-        <Events />
-      </main>
-      <Footer />
-    </>
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/events" element={<Events />} />
+        <Route path="/events/new" element={<EventNew />} />
+        <Route path="/events/:id" element={<EventDetails />} />
+        <Route path="/events/:id/edit" element={<EventEdit />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
   );
 }
-
-export default App;

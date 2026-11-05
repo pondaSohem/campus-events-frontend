@@ -1,11 +1,30 @@
+import request from "./api";
 import type { Event } from "../types/Event";
+import type { EventDto } from "../types/EventDto";
 
-const API_URL = "http://localhost:5229/api/events";
+export const eventService = {
+  list: () => request<Event[]>("/events"),
 
-export async function getEvents(): Promise<Event[]> {
-    const response = await fetch(API_URL);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch events: ${response.status}`);
-    }
-    return await response.json();
-}
+  get: (id: number) =>
+    request<Event>(`/events/${id}`),
+
+  create: (dto: EventDto) =>
+    request<Event>("/events", {
+      method: "POST",
+      body: dto,
+      requiresAdmin: true,
+    }),
+
+  update: (id: number, dto: EventDto) =>
+    request<void>(`/events/${id}`, {
+      method: "PUT",
+      body: dto,
+      requiresAdmin: true,
+    }),
+
+  remove: (id: number) =>
+    request<void>(`/events/${id}`, {
+      method: "DELETE",
+      requiresAdmin: true,
+    }),
+};

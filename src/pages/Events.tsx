@@ -1,29 +1,41 @@
-import EventCard from "../components/EventCard";
-import TicketCounter from "../components/TicketCounter";
+import { Link } from "react-router-dom";
 import { useEvents } from "../hooks/useEvents";
+import EventCard from "../components/EventCard";
 
-function Events() {
+export default function Events() {
   const { events, loading, error } = useEvents();
-  if (loading) return <p>Loading events...</p>;
-  if (error) return <p>{error}</p>;
-  if (events.length === 0) return <p>No events found.</p>;
+
+  if (loading) {
+    return <p role="status">Loading events...</p>;
+  }
+
+  if (error) {
+    return <div className="alert alert-danger">{error}</div>;
+  }
 
   return (
     <section>
-      <h2>Events</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1>Campus Events</h1>
 
-      {events.map((event) => (
-        <div key={event.id}>
-          <EventCard
-            title={event.title}
-            location={event.location}
-            price={event.price}
-          />
-          <TicketCounter />
+        <Link to="/events/new" className="btn btn-primary">
+          Create event
+        </Link>
+      </div>
+
+      {events.length === 0 ? (
+        <div className="alert alert-info">
+          No events are currently available.
         </div>
-      ))}
+      ) : (
+        <div className="row g-4">
+          {events.map((event) => (
+            <div className="col-md-6 col-lg-4" key={event.id}>
+              <EventCard event={event} />
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
-
-export default Events;

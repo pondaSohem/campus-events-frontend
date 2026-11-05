@@ -1,25 +1,43 @@
 import { useEffect, useState } from "react";
-import { getEvents } from "../services/eventService";
+import { eventService } from "../services/eventService";
 import type { Event } from "../types/Event";
 
 export function useEvents() {
-    const [events, setEvents] = useState<Event[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    let active = true;
 
-    useEffect(() => {
-        async function loadEvents() {
-            try {
-                const data = await getEvents();
-                setEvents(data);
-            } catch {
-                setError("Unabale to load events.");
-            } finally {
-                setLoading(false);
-            }
+    async function loadEvents() {
+      try {
+        const data = await eventService.list();
+
+        if (active) {
+          setEvents(data);
         }
-        loadEvents();
-    }, []);
-    return {events, loading, error}
+      } catch (error) {
+        if (active) {
+          setError(
+            error instanceof Error
+              ? error.message
+              : "Failed to load events."
+          );
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadEvents();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return { events, loading, error };
 }
