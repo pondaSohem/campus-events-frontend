@@ -6,48 +6,46 @@ import { ApiError } from "../services/api";
 import { useCategories } from "../hooks/useCategories";
 import type { EventDto } from "../types/EventDto";
 
-const eventSchema = z.object({
-  title: z.string().trim()
-    .min(3, "Title must be at least 3 characters.")
-    .max(120, "Title must be no more than 120 characters."),
-
-  description: z.string().trim()
-    .min(10, "Description must be at least 10 characters."),
-
-  imageUrl: z.string().trim().refine(
-    (value) => value === "" || isValidHttpUrl(value),
-    "Enter a valid HTTP or HTTPS image URL."
-  ).optional(),
-
-  location: z.string().trim()
-    .min(2, "Location must be at least 2 characters."),
-
-  startDate: z.string().min(1, "Start date is required."),
-  endDate: z.string().min(1, "End date is required."),
-
-  price: z.coerce.number()
-    .min(0, "Price cannot be negative."),
-
-  capacity: z.coerce.number()
-    .int("Capacity must be a whole number.")
-    .min(1, "Capacity must be at least 1."),
-
-  categoryId: z.coerce.number()
-    .int()
-    .min(1, "Select a category."),
-}).superRefine((values, context) => {
-  if (
-    values.startDate &&
-    values.endDate &&
-    new Date(values.endDate) <= new Date(values.startDate)
-  ) {
-    context.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["endDate"],
-      message: "End date must be after the start date.",
-    });
-  }
-});
+const eventSchema = z
+  .object({
+    title: z
+      .string()
+      .trim()
+      .min(3, "Enter at least 3 characters.")
+      .max(120, "Use 120 characters or fewer."),
+    description: z.string().trim().min(10, "Enter at least 10 characters."),
+    imageUrl: z
+      .string()
+      .trim()
+      .refine(
+        (value) =>
+          value === "" || value.startsWith("/images/") || isValidHttpUrl(value),
+        "Enter an /images/... path or a valid HTTP or HTTPS URL.",
+      )
+      .optional(),
+    location: z.string().trim().min(2, "Enter a location."),
+    startDate: z.string().min(1, "Choose a start date and time."),
+    endDate: z.string().min(1, "Choose an end date and time."),
+    price: z.coerce.number().min(0, "Price cannot be negative."),
+    capacity: z.coerce
+      .number()
+      .int("Capacity must be a whole number.")
+      .min(1, "Capacity must be at least 1."),
+    categoryId: z.coerce.number().int().min(1, "Choose a category."),
+  })
+  .superRefine((values, context) => {
+    if (
+      values.startDate &&
+      values.endDate &&
+      new Date(values.endDate) <= new Date(values.startDate)
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["endDate"],
+        message: "End date must be after the start date.",
+      });
+    }
+  });
 
 function isValidHttpUrl(value: string): boolean {
   try {
@@ -70,18 +68,6 @@ function toApiDate(value: string): string {
   return new Date(value).toISOString();
 }
 
-const emptyValues: FormValues = {
-  title: "",
-  description: "",
-  imageUrl: "",
-  location: "",
-  startDate: "",
-  endDate: "",
-  price: 0,
-  capacity: 1,
-  categoryId: 0,
-};
-
 export default function EventForm({
   defaultValues,
   onSubmit,
@@ -92,7 +78,6 @@ export default function EventForm({
     loading: categoriesLoading,
     error: categoriesError,
   } = useCategories();
-
   const {
     register,
     handleSubmit,
@@ -103,18 +88,33 @@ export default function EventForm({
     resolver: zodResolver(eventSchema),
     mode: "onTouched",
     defaultValues: {
-      ...emptyValues,
+      title: "",
+      description: "",
+      imageUrl: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+      price: 0,
+      capacity: 1,
+      categoryId: 0,
       ...defaultValues,
     },
   });
 
   useEffect(() => {
-    if (defaultValues) {
+    if (defaultValues)
       reset({
-        ...emptyValues,
+        title: "",
+        description: "",
+        imageUrl: "",
+        location: "",
+        startDate: "",
+        endDate: "",
+        price: 0,
+        capacity: 1,
+        categoryId: 0,
         ...defaultValues,
       });
-    }
   }, [defaultValues, reset]);
 
   async function submit(values: FormValues) {
@@ -129,7 +129,6 @@ export default function EventForm({
       capacity: values.capacity,
       categoryId: values.categoryId,
     };
-
     try {
       await onSubmit(dto);
     } catch (error) {
@@ -137,13 +136,12 @@ export default function EventForm({
         error instanceof ApiError || error instanceof Error
           ? error.message
           : "Unexpected error. Please try again.";
-
-      setError("root.server", {
-        type: "server",
-        message,
-      });
+      setError("root.server", { type: "server", message });
     }
   }
+
+  const invalidClass = (field: keyof FormValues) =>
+    errors[field] ? " is-invalid" : "";
 
   return (
     <form
@@ -152,170 +150,190 @@ export default function EventForm({
       className="card card-body shadow-sm"
     >
       {errors.root?.server && (
-        <div className="alert alert-danger">
+        <div className="alert alert-danger" role="alert">
           {errors.root.server.message}
+        </div>
+      )}
+      {categoriesError && (
+        <div className="alert alert-warning">
+          Categories could not be loaded: {categoriesError}
         </div>
       )}
 
       <div className="mb-3">
-        <label className="form-label">Title</label>
+        <label htmlFor="title" className="form-label">
+          Title <span className="form-required">*</span>
+        </label>
         <input
-          className={`form-control ${errors.title ? "is-invalid" : ""}`}
+          id="title"
+          className={`form-control${invalidClass("title")}`}
           {...register("title")}
         />
         {errors.title && (
-          <div className="invalid-feedback">
-            {errors.title.message}
-          </div>
+          <div className="invalid-feedback">{errors.title.message}</div>
         )}
       </div>
 
       <div className="mb-3">
-        <label className="form-label">Description</label>
+        <label htmlFor="description" className="form-label">
+          Description <span className="form-required">*</span>
+        </label>
         <textarea
-          className={`form-control ${errors.description ? "is-invalid" : ""}`}
+          id="description"
           rows={4}
+          className={`form-control${invalidClass("description")}`}
           {...register("description")}
         />
         {errors.description && (
-          <div className="invalid-feedback">
-            {errors.description.message}
-          </div>
+          <div className="invalid-feedback">{errors.description.message}</div>
         )}
       </div>
 
-      <div className="mb-3">
-        <label className="form-label">Image URL (optional)</label>
-        <input
-          className={`form-control ${errors.imageUrl ? "is-invalid" : ""}`}
-          {...register("imageUrl")}
-        />
-        {errors.imageUrl && (
-          <div className="invalid-feedback">
-            {errors.imageUrl.message}
+      <div className="row">
+        <div className="col-md-6 mb-3">
+          <label htmlFor="location" className="form-label">
+            Location <span className="form-required">*</span>
+          </label>
+          <input
+            id="location"
+            className={`form-control${invalidClass("location")}`}
+            {...register("location")}
+          />
+          {errors.location && (
+            <div className="invalid-feedback">{errors.location.message}</div>
+          )}
+        </div>
+        <div className="col-md-6 mb-3">
+          <label htmlFor="imageUrl" className="form-label">
+            Image path or URL
+          </label>
+          <input
+            id="imageUrl"
+            type="text"
+            placeholder="/images/event-name.jpg"
+            className={`form-control${invalidClass("imageUrl")}`}
+            {...register("imageUrl")}
+          />
+          <div className="form-text">
+            Put image files in the frontend public/images folder, then enter a
+            path such as /images/event-name.jpg. The path is saved in the event
+            record.
           </div>
-        )}
+          {errors.imageUrl && (
+            <div className="invalid-feedback">{errors.imageUrl.message}</div>
+          )}
+        </div>
       </div>
 
-      <div className="mb-3">
-        <label className="form-label">Location</label>
-        <input
-          className={`form-control ${errors.location ? "is-invalid" : ""}`}
-          {...register("location")}
-        />
-        {errors.location && (
-          <div className="invalid-feedback">
-            {errors.location.message}
-          </div>
-        )}
+      <div className="row">
+        <div className="col-md-6 mb-3">
+          <label htmlFor="startDate" className="form-label">
+            Start date and time <span className="form-required">*</span>
+          </label>
+          <input
+            id="startDate"
+            type="datetime-local"
+            className={`form-control${invalidClass("startDate")}`}
+            {...register("startDate")}
+          />
+          {errors.startDate && (
+            <div className="invalid-feedback">{errors.startDate.message}</div>
+          )}
+        </div>
+        <div className="col-md-6 mb-3">
+          <label htmlFor="endDate" className="form-label">
+            End date and time <span className="form-required">*</span>
+          </label>
+          <input
+            id="endDate"
+            type="datetime-local"
+            className={`form-control${invalidClass("endDate")}`}
+            {...register("endDate")}
+          />
+          {errors.endDate && (
+            <div className="invalid-feedback">{errors.endDate.message}</div>
+          )}
+        </div>
       </div>
 
-      <div className="mb-3">
-        <label className="form-label">Start date and time</label>
-        <input
-          type="datetime-local"
-          className={`form-control ${errors.startDate ? "is-invalid" : ""}`}
-          {...register("startDate")}
-        />
-        {errors.startDate && (
-          <div className="invalid-feedback">
-            {errors.startDate.message}
-          </div>
-        )}
-      </div>
-
-      <div className="mb-3">
-        <label className="form-label">End date and time</label>
-        <input
-          type="datetime-local"
-          className={`form-control ${errors.endDate ? "is-invalid" : ""}`}
-          {...register("endDate")}
-        />
-        {errors.endDate && (
-          <div className="invalid-feedback">
-            {errors.endDate.message}
-          </div>
-        )}
-      </div>
-
-      <div className="mb-3">
-        <label className="form-label">Price</label>
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          className={`form-control ${errors.price ? "is-invalid" : ""}`}
-          {...register("price")}
-        />
-        {errors.price && (
-          <div className="invalid-feedback">
-            {errors.price.message}
-          </div>
-        )}
-      </div>
-
-      <div className="mb-3">
-        <label className="form-label">Capacity</label>
-        <input
-          type="number"
-          min="1"
-          step="1"
-          className={`form-control ${errors.capacity ? "is-invalid" : ""}`}
-          {...register("capacity")}
-        />
-        {errors.capacity && (
-          <div className="invalid-feedback">
-            {errors.capacity.message}
-          </div>
-        )}
-      </div>
-
-      <div className="mb-3">
-        <label className="form-label">Category</label>
-        <select
-          className={`form-select ${errors.categoryId ? "is-invalid" : ""}`}
-          {...register("categoryId")}
-          disabled={categoriesLoading}
-        >
-          <option value="0">Select a category</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
+      <div className="row">
+        <div className="col-md-4 mb-3">
+          <label htmlFor="price" className="form-label">
+            Price (£) <span className="form-required">*</span>
+          </label>
+          <input
+            id="price"
+            type="number"
+            min="0"
+            step="0.01"
+            className={`form-control${invalidClass("price")}`}
+            {...register("price", { valueAsNumber: true })}
+          />
+          {errors.price && (
+            <div className="invalid-feedback">{errors.price.message}</div>
+          )}
+        </div>
+        <div className="col-md-4 mb-3">
+          <label htmlFor="capacity" className="form-label">
+            Capacity <span className="form-required">*</span>
+          </label>
+          <input
+            id="capacity"
+            type="number"
+            min="1"
+            step="1"
+            className={`form-control${invalidClass("capacity")}`}
+            {...register("capacity", { valueAsNumber: true })}
+          />
+          {errors.capacity && (
+            <div className="invalid-feedback">{errors.capacity.message}</div>
+          )}
+        </div>
+        <div className="col-md-4 mb-3">
+          <label htmlFor="categoryId" className="form-label">
+            Category <span className="form-required">*</span>
+          </label>
+          <select
+            id="categoryId"
+            className={`form-select${invalidClass("categoryId")}`}
+            disabled={categoriesLoading}
+            {...register("categoryId")}
+          >
+            <option value="0">
+              {categoriesLoading ? "Loading categories…" : "Choose a category"}
             </option>
-          ))}
-        </select>
-
-        {errors.categoryId && (
-          <div className="invalid-feedback">
-            {errors.categoryId.message}
-          </div>
-        )}
-
-        {categoriesError && (
-          <div className="text-danger mt-1">
-            {categoriesError}
-          </div>
-        )}
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          {errors.categoryId && (
+            <div className="invalid-feedback">{errors.categoryId.message}</div>
+          )}
+        </div>
       </div>
 
-      <div className="d-flex gap-2">
+      <div className="d-flex gap-2 mt-2">
         <button
           type="submit"
           className="btn btn-primary"
           disabled={isSubmitting || categoriesLoading}
         >
-          {isSubmitting ? "Saving..." : submitLabel}
+          {isSubmitting ? "Saving…" : submitLabel}
         </button>
-
         <button
           type="button"
           className="btn btn-outline-secondary"
-          onClick={() => reset({ ...emptyValues, ...defaultValues })}
+          onClick={() => reset()}
           disabled={isSubmitting}
         >
           Reset
         </button>
       </div>
+      <p className="form-text mt-3 mb-0">
+        Fields marked * are required. The API performs its own validation too.
+      </p>
     </form>
   );
 }

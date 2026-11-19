@@ -5,35 +5,24 @@ import type { Event } from "../types/Event";
 export function useEvents() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
-
-    async function loadEvents() {
-      try {
-        const data = await eventService.list();
-
-        if (active) {
-          setEvents(data);
-        }
-      } catch (error) {
-        if (active) {
+    eventService
+      .list()
+      .then((data) => {
+        if (active) setEvents(data);
+      })
+      .catch((err: unknown) => {
+        if (active)
           setError(
-            error instanceof Error
-              ? error.message
-              : "Failed to load events."
+            err instanceof Error ? err.message : "Unable to load events.",
           );
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void loadEvents();
-
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
     return () => {
       active = false;
     };

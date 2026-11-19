@@ -1,9 +1,9 @@
-function Footer() {
-    return (
-        <footer>
-            <p>CampusEvents</p>
-        </footer>
-    );
+export default function Footer() {
+  return (
+    <footer className="site-footer">
+      <div className="container small">
+        CampusEvents · University community events
+      </div>
+    </footer>
+  );
 }
-
-export default Footer;

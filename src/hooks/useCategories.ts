@@ -5,35 +5,24 @@ import type { Category } from "../types/Category";
 export function useCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
-
-    async function loadCategories() {
-      try {
-        const data = await categoryService.list();
-
-        if (active) {
-          setCategories(data);
-        }
-      } catch (error) {
-        if (active) {
+    categoryService
+      .list()
+      .then((data) => {
+        if (active) setCategories(data);
+      })
+      .catch((err: unknown) => {
+        if (active)
           setError(
-            error instanceof Error
-              ? error.message
-              : "Failed to load categories."
+            err instanceof Error ? err.message : "Unable to load categories.",
           );
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void loadCategories();
-
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
     return () => {
       active = false;
     };

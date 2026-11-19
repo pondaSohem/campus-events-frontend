@@ -6,11 +6,9 @@ export default function AppLayout() {
   return (
     <>
       <Navbar />
-
       <main className="container py-4 page-shell">
         <Outlet />
       </main>
-
       <Footer />
     </>
   );

@@ -7,36 +7,34 @@ interface EventCardProps {
 
 export default function EventCard({ event }: EventCardProps) {
   return (
-    <article className="card h-100 shadow-sm">
-      {event.imageUrl && (
+    <article className="card shadow-sm event-card">
+      {event.imageUrl ? (
         <img
-          src={event.imageUrl}
-          className="card-img-top"
+          className="event-image card-img-top"
+          src={
+            event.imageUrl?.startsWith("/") ? event.imageUrl : event.imageUrl
+          }
           alt={event.title}
         />
+      ) : (
+        <div className="event-image d-flex align-items-center justify-content-center text-secondary">
+          No image
+        </div>
       )}
-
       <div className="card-body d-flex flex-column">
-        <p className="text-muted mb-1">{event.categoryName}</p>
-
+        <p className="text-muted small mb-1">{event.categoryName}</p>
         <h2 className="h5 card-title">{event.title}</h2>
-
-        <p className="card-text">{event.location}</p>
-
-        <p>
-          {new Date(event.startDate).toLocaleString()}
-        </p>
-
-        <p className="fw-bold">
-          £{event.price.toFixed(2)}
-        </p>
-
-        <Link
-          to={`/events/${event.id}`}
-          className="btn btn-primary mt-auto"
-        >
-          View details
-        </Link>
+        <p className="mb-1">{event.location}</p>
+        <p className="mb-3">{new Date(event.startDate).toLocaleString()}</p>
+        <div className="mt-auto d-flex justify-content-between align-items-center">
+          <strong>£{event.price.toFixed(2)}</strong>
+          <Link
+            className="btn btn-outline-primary btn-sm"
+            to={`/events/${event.id}`}
+          >
+            View details
+          </Link>
+        </div>
       </div>
     </article>
   );
